@@ -1,0 +1,258 @@
+import java.util.*;
+
+abstract class User {
+    int id;
+    String name;
+    String email;
+    String address;
+    String phone;
+
+    abstract void login();
+    abstract void updateData();
+}
+
+class Client extends User {
+    List<Order> orders = new ArrayList<>();
+    int bonusPoints = 0;
+
+    void register() {
+        System.out.println(name + " registered");
+    }
+
+    @Override
+    void login() {
+        System.out.println(name + " logged in");
+    }
+
+    @Override
+    void updateData() {
+        System.out.println("Client data updated");
+    }
+}
+
+class Admin extends User {
+    @Override
+    void login() {
+        System.out.println("Admin logged in");
+    }
+
+    @Override
+    void updateData() {
+        System.out.println("Admin updated data");
+    }
+
+    void logAction(String action) {
+        System.out.println("LOG: " + action);
+    }
+}
+
+class Category {
+    int id;
+    String name;
+
+    Category(int id, String name) {
+        this.id = id;
+        this.name = name;
+    }
+}
+
+class Product {
+    int id;
+    String name;
+    String description;
+    double price;
+    int stock;
+    Category category;
+
+    Product(int id, String name, double price, int stock, Category category) {
+        this.id = id;
+        this.name = name;
+        this.price = price;
+        this.stock = stock;
+        this.category = category;
+    }
+
+    void create() {
+        System.out.println("Product created: " + name);
+    }
+
+    void update() {
+        System.out.println("Product updated");
+    }
+
+    void delete() {
+        System.out.println("Product deleted");
+    }
+}
+
+class ProductFactory {
+    static Product createProduct(String type) {
+        Category cat = new Category(1, type);
+
+        if (type.equalsIgnoreCase("phone")) {
+            return new Product(1, "Phone", 500, 10, cat);
+        } else if (type.equalsIgnoreCase("laptop")) {
+            return new Product(2, "Laptop", 1000, 5, cat);
+        }
+
+        return new Product(0, "Unknown", 0, 0, cat);
+    }
+}
+
+class PromoCode {
+    String code;
+    int discount;
+
+    PromoCode(String code, int discount) {
+        this.code = code;
+        this.discount = discount;
+    }
+
+    double apply(double total) {
+        return total - (total * discount / 100);
+    }
+}
+
+class Order {
+    int id;
+    Date createdAt;
+    String status;
+    Client client;
+    List<Product> products = new ArrayList<>();
+    double total;
+
+    Payment payment;
+    Delivery delivery;
+
+    Order(int id, Client client) {
+        this.id = id;
+        this.client = client;
+        this.createdAt = new Date();
+        this.status = "CREATED";
+    }
+
+    void addProduct(Product p) {
+        products.add(p);
+        total += p.price;
+    }
+
+    void applyPromo(PromoCode promo) {
+        total = promo.apply(total);
+    }
+
+    void create() {
+        System.out.println("Order created. Total: " + total);
+    }
+
+    void cancel() {
+        status = "CANCELLED";
+        System.out.println("Order cancelled");
+    }
+
+    void pay() {
+        if (payment != null) {
+            payment.process();
+            status = "PAID";
+        }
+    }
+}
+
+class Payment {
+    int id;
+    String type;
+    double amount;
+    String status;
+
+    Payment(int id, String type, double amount) {
+        this.id = id;
+        this.type = type;
+        this.amount = amount;
+        this.status = "NEW";
+    }
+
+    void process() {
+        status = "PAID";
+        System.out.println("Payment processed: " + amount);
+    }
+
+    void refund() {
+        status = "REFUNDED";
+        System.out.println("Payment refunded");
+    }
+}
+
+class Delivery {
+    int id;
+    String address;
+    String status;
+
+    Delivery(int id, String address) {
+        this.id = id;
+        this.address = address;
+        this.status = "PENDING";
+    }
+
+    void send() {
+        status = "SHIPPED";
+        System.out.println("Delivery sent");
+    }
+
+    void track() {
+        System.out.println("Delivery status: " + status);
+    }
+
+    void complete() {
+        status = "DELIVERED";
+        System.out.println("Delivery completed");
+    }
+}
+
+class Review {
+    int id;
+    String comment;
+    int rating;
+    Client client;
+    Product product;
+
+    Review(int id, String comment, int rating, Client client, Product product) {
+        this.id = id;
+        this.comment = comment;
+        this.rating = rating;
+        this.client = client;
+        this.product = product;
+    }
+}
+
+public class ECommerceSystem {
+    public static void main(String[] args) {
+        Client client = new Client();
+        client.name = "Ali";
+        client.register();
+        client.login();
+
+        Product phone = ProductFactory.createProduct("phone");
+        Product laptop = ProductFactory.createProduct("laptop");
+
+        Order order = new Order(1, client);
+        order.addProduct(phone);
+        order.addProduct(laptop);
+
+        PromoCode promo = new PromoCode("SALE10", 10);
+        order.applyPromo(promo);
+
+        order.create();
+
+        Payment payment = new Payment(1, "CARD", order.total);
+        order.payment = payment;
+        order.pay();
+
+        Delivery delivery = new Delivery(1, "Almaty");
+        order.delivery = delivery;
+        delivery.send();
+        delivery.complete();
+
+        Review review = new Review(1, "Good product", 5, client, phone);
+
+        System.out.println("Review: " + review.comment);
+    }
+}
